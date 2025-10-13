@@ -1,33 +1,59 @@
-from agno.agent import Agent  
+from agno.agent import Agent
+from agno.team import Team
 from typing import List
-import json
 from agno.models.google import Gemini
-from agno.media import Image
+from agno.tools.calculator import CalculatorTools
 import os
 from pydantic import BaseModel,Field
-from natsort import natsorted
 from dotenv import load_dotenv 
 
 load_dotenv()
 
-class dboutuput(BaseModel):
+class LeitorOutuput(BaseModel):
     answers: dict= Field(...,
-                               description="Um dicionario que tem como key a o nome da Imagem e como value cada uma das perguntas,e dentro de cada pergunta a resposta correpondente",
-                               )
+                               description="Um dicionario que tem como key o nome da Imagem e como value cada uma das perguntas,e dentro de cada pergunta a resposta correpondente",
+                        )
     
+class AnalistaInput(BaseModel):
+    tabela: dict = Field(...,
+                        description="Dicionario contendo perguntas e respostas referentes a cada imagem"
+                        )
     
+    questions: List[str] = Field(...,
+                                 description="Uma lista de perguntas do usuario a serem respondidas"
+                                 )
+
+class GeradorOutput(BaseModel):
+    dados: List[str] = Field(...,
+                             description= "Uma lista de informações relevantes que devem ser extraidos das imagens")
+
+
 model = Gemini(id = "gemini-2.5-flash",provider= "gemini",api_key = os.getenv("GEMINI_API_KEY"))
 
+gerador_perguntas = Agent(
+    model = model,
+    name = "Gerador de perguntas",
+    description= "Você é um agente IA especialista em decidir o que deve ser extraido de uma imagem baseado em uma série de perguntas",
+    instructions= """
+            Dado uma lista de perguntas do usuario, crie uma lista de informações que devem ser extraídas de cada uma das imagens.
+            Por exemplo:
+            INPUT: Quantas imagens tem mais de 5 pessoas.
+            OUTPUT: Quantidade de pessoas.
+    """,
+    output_schema= GeradorOutput,
+    debug_mode= True,
+)
 leitor = Agent(
     model = model,
     name = "Leitor de imagem",
     description= "Você é um agente IA especialista em analisar e extrair informações de imagens",
     instructions= """
-            Dado uma lista de imagens de entrada e uma  lista de perguntas do usuario,realize a seguinte ação para todas as imagens:
+            Dado uma lista de imagens de entrada e uma lista de perguntas ,realize a seguinte ação para todas as imagens:
             Responda a sequência de perguntas individualmente para cada imagem de maneira direta, por exemplo:
             Exemplo:
             -Pergunta: Quantas pessoas tem na imagem
             -Resposta: 3
+            Não de respostas ambíguas, caso esteja em dúvida,escolha apenas uma resposta direta
             Se a pergunta for sobre o contexto ou tema do ambiente, analise e responde:
             -Urbano para imagens  em que o foco principal seja cidades com carros,ruas,estradas,prédios etc.
             -Natureza para imagens relacionadas a natureza, campo,vegetação etc
@@ -35,26 +61,42 @@ leitor = Agent(
             -Não repita a pergunta do usuario mais de uma vez!
             -O nome das imagens dever se algo do tipo "Imagem1"
     """,
-    output_schema= dboutuput,
-    use_json_mode=True,
+    output_schema= LeitorOutuput,
+    use_json_mode= True,
     debug_mode= True,
-    
 )
 
-caminho_da_pasta = 'imagens'
+analista = Agent(
+    model = model,
+    name = "Analista de dados",
+    description= "Você é um agente IA especialista em analisar e fazer operações em dados no formato de um dicionario",
+    instructions= """
+            Dado um dicionario contendo informações de imagens, além de perguntas e respostas sobre cada imagem,
+            responda o input do usuario de acordo com os dados fornecidos.
+            O dicionario virá,por exemplo, na forma:
+            'Imagem1': {'Quantos carros tem na imagem': '2', 'Qual é o ambiente da imagem': 'Urbano', 'Quantas pessoas tem na imagem': '8'}, 
+            'Imagem2': {'Quantos carros tem na imagem': '5', 'Qual é o ambiente da imagem': 'Urbano', 'Quantas pessoas tem na imagem': '2'}
+            e assim por diante
+            Você será equipado com uma calculadora para casos envolvendo operações matemáticas mais complexas como média, desvio padrão,etc.
+    """,
+    tools = [CalculatorTools()],
+    input_schema= AnalistaInput,
+    debug_mode= True,
+)
 
-lista_de_imagens = []
-
-nomes_dos_arquivos = natsorted([f for f in os.listdir(caminho_da_pasta) if f.endswith(('.png', '.jpg', '.jpeg'))])
-print(nomes_dos_arquivos)
-for nome_do_arquivo in nomes_dos_arquivos:
-    caminho_completo = os.path.join(caminho_da_pasta, nome_do_arquivo)
-    imagem = Image(filepath=caminho_completo)
-    if imagem is not None:
-        lista_de_imagens.append(imagem)
-
-input = ["Quantos carros tem na imagem","Qual é o ambiente da imagem","Quantas pessoas tem na imagem"]
-
-
-run_output = leitor.run(input=input,images=lista_de_imagens)
-print(run_output.content)
+vilma = Team(
+        name = "vilma",
+        members=[gerador_perguntas,leitor,analista],
+        model=model,
+        description= """Você é o chefe de um sistema de extração e analíse de dados de imagens.Seu trabalho é utilizar o membro Leitor de Imagem para extrair 
+        os dados e em seguida usar o agente Analista de dados para responder as perguntas do usúario.
+        """,
+        instructions = """
+        Siga os seguintes passos:
+        1 - Leia as perguntas do usuario e mande para o Gerador de perguntas para descobrir quais são as informaçẽos relevantes a serem extraídas das imagens.
+        2 - Dado a lista gerada pelo Gerador de perguntas, envie a mesma lista para o Leitor de Imagem para ele extrair as informações das imagens
+        3 - Com os dados extraídos, envie o dicionario gerado pelo Leitor de Imagem e as perguntas do input do usuario para o Analista de dados.
+        4 - Use o Analista de dados para responder as perguntas do usuario.
+        """,
+        debug_mode= True,
+)
