@@ -14,15 +14,6 @@ class LeitorOutuput(BaseModel):
                                description="Um dicionario que tem como key o nome da Imagem e como value cada uma das perguntas,e dentro de cada pergunta a resposta correpondente",
                         )
     
-class AnalistaInput(BaseModel):
-    tabela: dict = Field(...,
-                        description="Dicionario contendo perguntas e respostas referentes a cada imagem"
-                        )
-    
-    questions: List[str] = Field(...,
-                                 description="Uma lista de perguntas do usuario a serem respondidas"
-                                 )
-
 class GeradorOutput(BaseModel):
     dados: List[str] = Field(...,
                              description= "Uma lista de informações relevantes que devem ser extraidos das imagens")
@@ -71,16 +62,15 @@ analista = Agent(
     name = "Analista de dados",
     description= "Você é um agente IA especialista em analisar e fazer operações em dados no formato de um dicionario",
     instructions= """
-            Dado um dicionario contendo informações de imagens, além de perguntas e respostas sobre cada imagem,
-            responda o input do usuario de acordo com os dados fornecidos.
+            Dado o dicionario fornecido pelo Leitor de Imagens que contém keys com o nome das imagens e values com as perguntas seguido das 
+            respostas sobre cada imagem,responda o input do usuario de acordo com os dados fornecidos.
             O dicionario virá,por exemplo, na forma:
             'Imagem1': {'Quantos carros tem na imagem': '2', 'Qual é o ambiente da imagem': 'Urbano', 'Quantas pessoas tem na imagem': '8'}, 
             'Imagem2': {'Quantos carros tem na imagem': '5', 'Qual é o ambiente da imagem': 'Urbano', 'Quantas pessoas tem na imagem': '2'}
-            e assim por diante
+            e assim por diante...
             Você será equipado com uma calculadora para casos envolvendo operações matemáticas mais complexas como média, desvio padrão,etc.
     """,
     tools = [CalculatorTools()],
-    input_schema= AnalistaInput,
     debug_mode= True,
 )
 
