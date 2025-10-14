@@ -9,11 +9,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+##Define o estilo de saída do leitor##
 class LeitorOutuput(BaseModel):
     answers: dict= Field(...,
                                description="Um dicionario que tem como key o nome da Imagem e como value cada uma das perguntas,e dentro de cada pergunta a resposta correpondente",
                         )
-    
+
+##Define o estilo de saída do gerador de perguntas##   
 class GeradorOutput(BaseModel):
     dados: List[str] = Field(...,
                              description= "Uma lista de informações relevantes que devem ser extraidos das imagens")
@@ -21,6 +23,9 @@ class GeradorOutput(BaseModel):
 
 model = Gemini(id = "gemini-2.5-flash",provider= "gemini",api_key = os.getenv("GEMINI_API_KEY"))
 
+#Agente que recebe a lista de perguntas do usuario e faz uma analíse para descobrir quais|# 
+#são as informações relevantes a serem extraídas da imagem.#
+#O nome está ruim, vou trocar depois.#
 gerador_perguntas = Agent(
     model = model,
     name = "Gerador de perguntas",
@@ -34,6 +39,15 @@ gerador_perguntas = Agent(
     output_schema= GeradorOutput,
     debug_mode= True,
 )
+
+#Agente que le as imagens e gera um dicionario contendo as informações das imagens# 
+#No estilo: "Imagem1": {                                                                                                                                                                    
+#         "Quantidade de pessoas": 7,                                                                                                                                                   
+#        "Ambiente de natureza": false,                                                                                                                                                
+#        "Quantidade de carros": 3,                                                                                                                                                    
+#       "Cor predominante": "Cinza"                                                                                                                                                   
+#     },   
+
 leitor = Agent(
     model = model,
     name = "Leitor de imagem",
@@ -57,6 +71,8 @@ leitor = Agent(
     debug_mode= True,
 )
 
+#Agente que analisa o dicionario fornecido pelo leitor e responde as perguntas do usuario#
+#Equipado com uma calculadora para calculos matematicos como média#
 analista = Agent(
     model = model,
     name = "Analista de dados",
@@ -74,6 +90,8 @@ analista = Agent(
     debug_mode= True,
 )
 
+#Time contendo os agentes e é basicamente o orquestrador de tudo#
+#Ele é responsável por designar as tarefas, fazer as chamadas dos agentes e etc#
 vilma = Team(
         name = "vilma",
         members=[gerador_perguntas,leitor,analista],
@@ -84,7 +102,7 @@ vilma = Team(
         instructions = """
         Siga os seguintes passos:
         1 - Leia as perguntas do usuario e mande para o Gerador de perguntas para descobrir quais são as informaçẽos relevantes a serem extraídas das imagens.
-        2 - Dado a lista gerada pelo Gerador de perguntas, envie a mesma lista para o Leitor de Imagem para ele extrair as informações das imagens
+        2 - Dado a lista gerada pelo Gerador de perguntas, envie a lista gerada para o Leitor de Imagem para ele extrair as informações das imagens e gerar um dicionario com as informações
         3 - Com os dados extraídos, envie o dicionario gerado pelo Leitor de Imagem e as perguntas do input do usuario para o Analista de dados.
         4 - Use o Analista de dados para responder as perguntas do usuario.
         """,
