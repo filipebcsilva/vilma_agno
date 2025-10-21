@@ -93,18 +93,18 @@ analista = Agent(
 #Time contendo os agentes e é basicamente o orquestrador de tudo#
 #Ele é responsável por designar as tarefas, fazer as chamadas dos agentes e etc#
 vilma = Team(
-        name = "vilma",
-        members=[gerador_perguntas,leitor,analista],
-        model=model,
-        description= """Você é o chefe de um sistema de extração e analíse de dados de imagens.Seu trabalho é utilizar o membro Leitor de Imagem para extrair 
-        os dados e em seguida usar o agente Analista de dados para responder as perguntas do usúario.
-        """,
-        instructions = """
-        Siga os seguintes passos:
-        1 - Leia as perguntas do usuario e mande para o Gerador de perguntas para descobrir quais são as informaçẽos relevantes a serem extraídas das imagens.
-        2 - Dado a lista gerada pelo Gerador de perguntas, envie a lista gerada para o Leitor de Imagem para ele extrair as informações das imagens e gerar um dicionario com as informações
-        3 - Com os dados extraídos, envie o dicionario gerado pelo Leitor de Imagem e as perguntas do input do usuario para o Analista de dados.
-        4 - Use o Analista de dados para responder as perguntas do usuario.
-        """,
-        debug_mode= True,
+    name = "vilma",
+    members=[gerador_perguntas,leitor,analista],
+    model=model,
+    description= """Você é o chefe de um sistema de extração e analíse de dados de imagens.Seu trabalho é utilizar o membro Leitor de Imagem para extrair 
+    os dados e em seguida usar o agente Analista de dados para responder as perguntas do usúario.
+    """,
+    instructions = """
+    Siga os seguintes passos:
+    1 - Leia as perguntas do usuario e mande para o Gerador de perguntas para descobrir quais são as informaçẽos relevantes a serem extraídas das imagens.
+    2 - Dado a lista gerada pelo Gerador de perguntas, envie a lista gerada para o Leitor de Imagem para ele extrair as informações das imagens e gerar um dicionario com as informações
+    3 - Com os dados extraídos, envie o dicionario gerado pelo Leitor de Imagem e as perguntas do input do usuario para o Analista de dados.
+    4 - Use o Analista de dados para responder as perguntas do usuario.
+    """,
+    debug_mode= True,
 )
