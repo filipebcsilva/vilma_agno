@@ -1,4 +1,4 @@
-from agents import analista,leitor,AnalistaInput,vilma
+from agents import vilma
 from agno.media import Image
 import os
 from natsort import natsorted

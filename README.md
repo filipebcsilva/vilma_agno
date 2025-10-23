@@ -10,11 +10,11 @@
 
 - [ ] tentar trocar o gemini por um modelo local (llava1.5, por exemplo) ou algum qwen multimodal para evitar problemas de block do número de requisições. 
 
-- [ ] retirar dos prompts tudo que seja relacionado às perguntas que estão sendo feitas depois. Colocar coisas relacionados (e.g., um one-shot example falando de quantidades de pessoas e depois perguntar sobre isso), pode fazer a gente achar que o sistema está funcionando melhor do que realmente está (porque a resposta já está meio que dada no prompt). 
+- [ ] retirar dos prompts tudo que seja relacionado às perguntas que estão sendo feitas depois. Colocar coisas relacionados (e.g., um one-shot example falando de quantidades de pessoas e depois perguntar sobre isso), pode fazer a gente achar que o sistema está funcionando melhor do que realmente está (porque a resposta já está meio que dada no prompt). PRONTO
 
 - [ ] modificar o agente que processa a estrutura de dados para produzir código python ao invés de usar a calculadora. 
 
-- [ ] colocar prompts em ingles 
+- [ ] colocar prompts em ingles PRONTO
 
 - [ ] ver se é possível fazer apenas o agente que processa imagens receber a imagem como entrada 
 
